@@ -14,6 +14,12 @@
 #define FDC1004_100HZ (0x01)
 #define FDC1004_200HZ (0x02)
 #define FDC1004_400HZ (0x03)
+
+#define FDC1004_Chan0 (0x00)
+#define FDC1004_Chan1 (0x01)
+#define FDC1004_Chan2 (0x02)
+#define FDC1004_Chan3 (0x03)
+
 #define FDC1004_IS_RATE(x) (x == FDC1004_100HZ || \
                             x == FDC1004_200HZ || \
                             x == FDC1004_400HZ)
@@ -48,13 +54,11 @@ typedef struct fdc1004_measurement_t{
 class FDC1004 {
  public:
     FDC1004(uint16_t rate = FDC1004_100HZ);
-    int32_t getCapacitance(uint8_t channel = 1);
-    uint8_t getRawCapacitance(uint8_t channel, fdc1004_measurement_t * value);
-    uint8_t configureMeasurementSingle(uint8_t measurement, uint8_t channel, uint8_t capdac); 
-    uint8_t triggerSingleMeasurement(uint8_t measurement, uint8_t rate);
+    uint8_t configureMeasurement(uint8_t measurement, uint8_t channel, uint8_t diffChannel, uint8_t capdac); 
+    uint8_t triggerMeasurement(uint8_t measurement, uint8_t rate, uint8_t measType);
     uint8_t readMeasurement(uint8_t measurement, uint16_t * value);
-    uint8_t measureChannel(uint8_t channel, uint8_t capdac, uint16_t * value);
-
+    uint8_t measureChannel(uint8_t channel, uint8_t diffChannel, uint8_t capdac, uint16_t * value, uint8_t measType);
+    uint8_t verifyData(uint8_t measurement, uint8_t channel, uint8_t diffChannel, uint8_t capdac);
 
  private:
     uint8_t _addr;
