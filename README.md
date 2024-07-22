@@ -1,7 +1,7 @@
 #FDC1004 
 
-This Library provides basic functionality for the FDC1004 Capacitance to Digital Sensor. The FDC1004 provides femto-farad precision for measuring capacitances up to 115pF in 
-incrementes of 500 aF.
+This Library provides basic functionality for the FDC1004 Capacitance to Digital Sensor. The FDC1004 provides femto-farad precision for measuring capacitances up to 115 pF in 
+increments of 500 aF.
 
 ## Requirements
 
