@@ -1,5 +1,0 @@
-FDC1004	KEYWORD1
-configureMeasturementSingle	KEYWORD2
-triggerSingleMeasurement	KEYWORD2
-readMeasurement	KEYWORD2
-measureChannel	KEYWORD2
