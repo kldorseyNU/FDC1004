@@ -19,12 +19,14 @@ incrementes of 500 aF.
  * If a capacitance value is not read, or it is out of the +/- 15 pF bounds, capdac resets to 0 and re-adjusts to find the new capdac.
 
 ## Single-ended capacitance (pin to ground) or differential (pin to pin) readings: 
- * The convenience functions in the .cpp file (written by Beshaya) set the measurement type (single or continuous, which channels, single-ended or differential)
+ * If first pin and second pin in configureMeasurement and triggerMeasurement functions are the same, it assumes a sigle-ended measurement
+ * Otherwise, it assumes a differential measurement between those pins.
+ * The convenience functions in the .cpp file (written by Beshaya) set the measurement type (single or continuous, which channels, measurement number/register)
  * They also trigger the measurement. For streaming/continuous measurement, this only needs to occur once. For single measurements, the cap-to-dig board must be triggered before each 
 read.
- * MSB (16 bits) and LSB (16 bits) must be read from the cap-to-dig board before the next read. 
- * Because the relative capacitance measurement range is +/- 15 pF with a resolution of 500 aF, the least significant bit of a 16 bit value in two's complement represents the 
-measurement 
-resolution
- * 15 pF * (1 bit / 32 767 bits) = 460 aF
- * Therefore, this code ignores the LSB entirely from the capacitance calculation.   
+ * The absolute capacitance is a function of the capdac and the read MSB (value)
+ * The measurement resolution is 0.5 fF and the max range is 30 pF 
+ * A 16 bit two's complement number ranges from -32768 to 32767 (2^15 - 1) (i.e., resolution of ~0.46 fF with +/- 15 pF range)
+ * Therefore, we don't need to calculate the capacitance using the LSB since the most significant bit of LSB is below the measurement resolution/noise floor
+ * We do still need to read LSB since the FDC1004 is expecting it to be read before the next measurement. The convenience functions in the .cpp file take care of this read.
+ * MSB (16 bits) and LSB (16 bits) must be read from the cap-to-dig board before the next read.    
