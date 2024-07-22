@@ -22,48 +22,62 @@
 #include <Wire.h>
 #include <FDC1004.h>
 
-uint8_t capdac = 0;
-uint16_t measType = 0; // 0 is single read, 1 is continuous read
-uint8_t measurement = 0; //Select measurement slot 0, 1, 2, or 3
-int readRate = 100;
+FDC1004 fdc;
+
+////////////Constant measurement parameters/////////////
 const float capMax = 14.9;
 const float capdacConversion = 3.125;
 
-FDC1004 fdc;
+const uint8_t measSingl = 0; // 0 is single read, 1 is continuous read
+const uint8_t measCont = 1; // 0 is single read, 1 is continuous read
+
+const uint8_t measA = 0; 
+const uint8_t measB = 1; 
+const uint8_t measC = 2; 
+const uint8_t measD = 3; 
+
+///////////Parameters you can change//////////////
+uint8_t capdac = 0; // Will auto-adjust, but you can set to expected value for speed
+int readRate = 100;
+
+/////////////////////////
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting");
-  delay(1000);
   Wire.begin();
   delay(1000);
-  setCAPDAC();
 }
 
 void loop() {  
+  absoluteCapacitance(measA, 0);
   delay(2500);
-  if (measType == 1){
-    float capacitanceRelative = relativeCapacitance();
-    if ((capacitanceRelative < capMax) && (capacitanceRelative > -1 * capMax)){
-      float capacitanceAbsolute = capacitanceRelative + (3.125 * (float)capdac); //converts capdac to pF
-      Serial.println(capacitanceAbsolute, 4);
-    }
-    else {
-      Serial.println("Capacitance out of bounds, re-running setCAPDAC");
-      setCAPDAC();
-    }
-  }
-  else{
-    fdc.triggerMeasurement(measurement, FDC1004_100HZ, measType);
-    Serial.println(relativeCapacitance());
-  }
 }
 
-float relativeCapacitance() {  
+float absoluteCapacitance(uint8_t measSlot, uint8_t measType){
+  float capacitanceRelative = capMax + 1; //set to out of scale value. If value is not read, this will re-trigger CAPDAC
+  float capacitanceAbsolute = 0;
+  if (measType == 0){
+    capacitanceRelative = configTrigRead(measSlot, measType);
+  }
+  else{
+    capacitanceRelative = relativeCapacitance(measSlot);
+  } 
+  if ((capacitanceRelative < capMax) && (capacitanceRelative > -1 * capMax)){
+    capacitanceAbsolute = capacitanceRelative + (3.125 * (float)capdac); //converts capdac to pF
+    Serial.println(capacitanceAbsolute, 4);
+  }
+  else {
+    Serial.println("Capacitance out of bounds, re-running setCAPDAC");
+    setCAPDAC(measSlot, measType);
+  }
+  return capacitanceAbsolute;
+}
+
+float relativeCapacitance(uint8_t measSlot) {  
   delay(readRate);
   uint16_t value[2];
   float capacitanceRelative = capMax + 1; //set to out of scale value. If value is not read, this will re-trigger CAPDAC
-  if (! fdc.readMeasurement(measurement, value)) {
+  if (! fdc.readMeasurement(measSlot, value)) {
     // The absolute capacitance is a function of the capdac and the read MSB (value)
     // The measurement resolution is 0.5 fF and the max range is 30 pF 
     // A 16 bit two's complement binary number ranges from -32768 to 32767 (2^15 - 1) (i.e., resolution of ~0.46 fF with +/- 15 pF range)
@@ -76,9 +90,9 @@ float relativeCapacitance() {
   return capacitanceRelative;
 }
 
-void setCAPDAC(){
+void setCAPDAC(uint8_t measSlot, uint8_t measType){
   capdac = 0;
-  float capacitanceRelative = triggerAndRead();
+  float capacitanceRelative = configTrigRead(measSlot, measType);
   uint8_t capdacTimeout = 0;
   uint8_t numCAPDACtries = 30;
 
@@ -89,7 +103,7 @@ void setCAPDAC(){
     else{
       capdacTimeout++;
     }
-    capacitanceRelative = triggerAndRead();
+    capacitanceRelative = configTrigRead(measSlot, measType);
   }
 
   if (capdacTimeout == numCAPDACtries){
@@ -117,8 +131,8 @@ int adjustCAPDAC(float capacitanceRelative) {
     } 
 }
 
-float triggerAndRead(){
-  fdc.configureMeasurement(measurement, FDC1004_Chan0, FDC1004_Chan0, capdac);
-  fdc.triggerMeasurement(measurement, FDC1004_100HZ, measType);
-  return relativeCapacitance();
+float configTrigRead(uint8_t measSlot, uint8_t measType){
+  fdc.configureMeasurement(measSlot, FDC1004_Chan0, FDC1004_Chan0, capdac);
+  fdc.triggerMeasurement(measSlot, FDC1004_100HZ, measType);
+  return relativeCapacitance(measSlot);
 }
