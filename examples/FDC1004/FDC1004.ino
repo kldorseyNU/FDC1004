@@ -36,29 +36,28 @@ const uint8_t measB = 1;
 const uint8_t measC = 2; 
 const uint8_t measD = 3; 
 
+const uint8_t pin1 = (uint8_t)FDC1004_Chan0;
+const uint8_t pin2 = (uint8_t)FDC1004_Chan1; //pin 2 must have a higher or same value as pin 1!
+const uint8_t pin3 = (uint8_t)FDC1004_Chan2; //pin 2 must have a higher or same value as pin 1!
+const uint8_t pin4 = (uint8_t)FDC1004_Chan3; //pin 2 must have a higher or same value as pin 1!
+
 ///////////Parameters you can change//////////////
 uint8_t capdac = 0; // Will auto-adjust, but you can set to expected value for speed
-int readRate = 100;
-uint8_t pin1 = (uint8_t)FDC1004_Chan0;
-uint8_t pin2 = (uint8_t)FDC1004_Chan0; //pin 2 must have a higher or same value as pin 1!
+int readRate = 100; //does not currently work below 100 ms/10 Hz
 
 /////////////////////////
-
-uint16_t measType = 1; // 0 is single read, 1 is continuous read
-int chanA = 0;
-int chanB = 0;
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
   Wire.begin();
   delay(1000);
-  setCAPDAC(measA, chanA, chanB, measType);
+  setCAPDAC(measA, pin1, pin1, measCont);
 }
 
 void loop() {  
   delay(2500);
-  absoluteCapacitance(measA, chanA, chanB, measType);
+  absoluteCapacitance(measA, pin1, pin1, measCont);
 }
 
 float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType) {
@@ -135,7 +134,7 @@ int adjustCAPDAC(float capacitanceRelative) {
 }
 
 float configTrigRead(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType){
-  fdc.configureMeasurement(measSlot, FDC1004_Chan0, FDC1004_Chan0, capdac);
+  fdc.configureMeasurement(measSlot, chanA, chanB, capdac);
   fdc.triggerMeasurement(measSlot, FDC1004_100HZ, measType);
   return relativeCapacitance(measSlot);
 }
