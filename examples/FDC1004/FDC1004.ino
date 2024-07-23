@@ -10,39 +10,61 @@
  * Power on and run this code
  * Open a Serial monitor at 115200 baud
  **************************************************************
- * Written by Benjamin Shaya for Rest Devices
+ * Read/write convenience functions written by Benjamin Shaya for Rest Devices
  * bshaya@alum.mit.edu
  * https://github.com/beshaya/FDC1004
+ **************************************************************
+ * Functions in this .ino file written by Kris Dorsey, Northeastern University
+ * k.dorsey@northeastern.edu
+ * https://github.com/kdorseyNU/FDC1004
  **************************************************************/
  
 #include <Wire.h>
 #include <FDC1004.h>
 
-uint8_t capdac = 0;
-uint16_t measType = 1; // 0 is single read, 1 is continuous read
-uint8_t measurement = 0; //Select measurement slot 0, 1, 2, or 3
-int readRate = 100;
-const float capMax = 14.9;
+FDC1004 fdc;
+
+////////////Constant measurement parameters/////////////
+const float capMax = 14.0;
 const float capdacConversion = 3.125;
 
-FDC1004 fdc;
+const uint8_t measSingl = 0; // 0 is single read, 1 is continuous read
+const uint8_t measCont = 1; // 0 is single read, 1 is continuous read
+
+const uint8_t measA = 0; 
+const uint8_t measB = 1; 
+const uint8_t measC = 2; 
+const uint8_t measD = 3; 
+
+///////////Parameters you can change//////////////
+uint8_t capdac = 0; // Will auto-adjust, but you can set to expected value for speed
+int readRate = 100;
+uint8_t pin1 = (uint8_t)FDC1004_Chan0;
+uint8_t pin2 = (uint8_t)FDC1004_Chan0; //pin 2 must have a higher or same value as pin 1!
+
+/////////////////////////
+
+uint16_t measType = 1; // 0 is single read, 1 is continuous read
+uint8_t measurement = 0; //Select measurement slot 0, 1, 2, or 3
+int chanA = 0;
+int chanB = 0;
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
   Wire.begin();
   delay(1000);
-  setCAPDAC();
+  setCAPDAC(measA, chanA, chanB, measType);
 }
 
 void loop() {  
   delay(2500);
-  absoluteCapacitance();
+  absoluteCapacitance(measA, chanA, chanB, measType);
 }
 
-float absoluteCapacitance() {
+float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType) {
   if (measType == 0){
-      configTrigRead();
+      configTrigRead(measSlot, chanA, chanB, measType);
     }
   float capacitanceRelative = relativeCapacitance();
   if ((capacitanceRelative <= capMax) && (capacitanceRelative >= -capMax)){
@@ -52,13 +74,13 @@ float absoluteCapacitance() {
   }
   else {
     Serial.println("Capacitance out of bounds, re-running setCAPDAC");
-    setCAPDAC();
+    setCAPDAC(measSlot, chanA, chanB, measType);
     return -1;
   }
 }
 
 float relativeCapacitance() {  
-  delay(readRate);
+  delay(100);
   uint16_t value[2];
   float capacitanceRelative = 17;
   if (!fdc.readMeasurement(measurement, value)) {
@@ -74,20 +96,20 @@ float relativeCapacitance() {
   return capacitanceRelative;
 }
 
-int setCAPDAC(){
+int setCAPDAC(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType){
   capdac = 0;
-  float capacitanceRelative = configTrigRead();
+  float capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType);
   uint8_t capdacTimeout = 0;
 
   while (capdacTimeout < 30){
     if (adjustCAPDAC(capacitanceRelative)){
       capdacTimeout = 31;
-      capacitanceRelative = configTrigRead();
+      capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType);
       return 1;
     }
     else{
       capdacTimeout++;
-      capacitanceRelative = configTrigRead();
+      capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType);
     }
   }
   return 0;
@@ -113,7 +135,7 @@ int adjustCAPDAC(float capacitanceRelative) {
     } 
 }
 
-float configTrigRead(){
+float configTrigRead(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType){
   fdc.configureMeasurement(measurement, FDC1004_Chan0, FDC1004_Chan0, capdac);
   fdc.triggerMeasurement(measurement, FDC1004_100HZ, measType);
   return relativeCapacitance();
