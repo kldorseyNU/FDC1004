@@ -2,7 +2,6 @@
  * Example Program for FDC1004 Library
  * This program will demonstrates reading the capacitance on CAP1 of the FDC1004
  * and changing capdac to try to auto-range the chip
- * Note that the output is a signed integer, so values greater than 7FFF FFFF are actually negative!
  **************************************************************
  * Setup
  * Connect 3.3V and Ground to the FDC1004 (don't use 5V, you'll fry your chip!)
@@ -62,10 +61,13 @@ void loop() {
 }
 
 float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType) {
+  float capacitanceRelative;
   if (measType == 0){
-      configTrigRead(measSlot, chanA, chanB, measType);
+    capacitanceRelative =  configTrigRead(measSlot, chanA, chanB, measType);
     }
-  float capacitanceRelative = relativeCapacitance(measSlot);
+  else{
+    capacitanceRelative = relativeCapacitance(measSlot);
+    }
   if ((capacitanceRelative <= capMax) && (capacitanceRelative >= -capMax)){
     float capacitanceAbsolute = capacitanceRelative + (3.125 * (float)capdac); //converts capdac to pF
     Serial.println(capacitanceAbsolute);
@@ -81,7 +83,7 @@ float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_
 float relativeCapacitance(uint8_t measSlot) {  
   delay(100);
   uint16_t value[2];
-  float capacitanceRelative = 17;
+  float capacitanceRelative = capMax + 1;
   if (!fdc.readMeasurement(measSlot, value)) {
     // The absolute capacitance is a function of the capdac and the read MSB (value[0])
     // The measurement resolution is 0.5 fF and the max range is 30 pF 
