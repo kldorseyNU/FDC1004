@@ -93,19 +93,28 @@ uint8_t FDC1004::readMeasurement(uint8_t measurement, uint16_t * value) {
     }
     
     //check if measurement is complete
-    uint16_t fdc_register = read16(FDC_REGISTER);
-    if (! (fdc_register & ( 1 << (3-measurement)))) {
-        Serial.println("measurement not completed");
-        Serial.println(fdc_register, HEX);
-        return 2;
+    uint16_t fdcRegister = read16(FDC_REGISTER);
+    uint8_t delayCount = 0;
+    uint8_t maxDelayCount = 10;
+    while ((! (fdcRegister & ( 1 << (3-measurement)))) && delayCount < maxDelayCount) {
+      //confirm with FDC that measurement is complete
+      delay(10);
+      delayCount++;
+      fdcRegister = read16(FDC_REGISTER);
     }
-  
-  //read the value
-  uint16_t msb = read16(MEAS_MSB[measurement]);
-  uint16_t lsb = read16(MEAS_LSB[measurement]);  
-  value[0] = msb;
-  value[1] = lsb;
-  return 0;
+
+    if (delayCount < maxDelayCount){
+      //read the value
+      uint16_t msb = read16(MEAS_MSB[measurement]);
+      uint16_t lsb = read16(MEAS_LSB[measurement]);  
+      value[0] = msb;
+      value[1] = lsb;
+      return 0;
+    }
+    else{
+      //read failed or timed out
+      return 1;    
+    }  
 }
 
 //reset software of FDC1004
