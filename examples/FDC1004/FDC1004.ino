@@ -45,7 +45,6 @@ uint8_t pin2 = (uint8_t)FDC1004_Chan0; //pin 2 must have a higher or same value 
 /////////////////////////
 
 uint16_t measType = 1; // 0 is single read, 1 is continuous read
-uint8_t measurement = 0; //Select measurement slot 0, 1, 2, or 3
 int chanA = 0;
 int chanB = 0;
 
@@ -66,7 +65,7 @@ float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_
   if (measType == 0){
       configTrigRead(measSlot, chanA, chanB, measType);
     }
-  float capacitanceRelative = relativeCapacitance();
+  float capacitanceRelative = relativeCapacitance(measSlot);
   if ((capacitanceRelative <= capMax) && (capacitanceRelative >= -capMax)){
     float capacitanceAbsolute = capacitanceRelative + (3.125 * (float)capdac); //converts capdac to pF
     Serial.println(capacitanceAbsolute);
@@ -79,11 +78,11 @@ float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_
   }
 }
 
-float relativeCapacitance() {  
+float relativeCapacitance(uint8_t measSlot) {  
   delay(100);
   uint16_t value[2];
   float capacitanceRelative = 17;
-  if (!fdc.readMeasurement(measurement, value)) {
+  if (!fdc.readMeasurement(measSlot, value)) {
     // The absolute capacitance is a function of the capdac and the read MSB (value[0])
     // The measurement resolution is 0.5 fF and the max range is 30 pF 
     // A 16 bit two's complement binary number ranges from -32768 to 32767 (i.e., resolution of ~0.46 fF with +/- 15 pF range)
@@ -136,7 +135,7 @@ int adjustCAPDAC(float capacitanceRelative) {
 }
 
 float configTrigRead(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType){
-  fdc.configureMeasurement(measurement, FDC1004_Chan0, FDC1004_Chan0, capdac);
-  fdc.triggerMeasurement(measurement, FDC1004_100HZ, measType);
-  return relativeCapacitance();
+  fdc.configureMeasurement(measSlot, FDC1004_Chan0, FDC1004_Chan0, capdac);
+  fdc.triggerMeasurement(measSlot, FDC1004_100HZ, measType);
+  return relativeCapacitance(measSlot);
 }
