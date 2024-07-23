@@ -52,6 +52,7 @@ void setup() {
   delay(1000);
   Wire.begin();
   delay(1000);
+  fdc.resetDevice();
   setCAPDAC(measA, pin1, pin1, measCont);
 }
 

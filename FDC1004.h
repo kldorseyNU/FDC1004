@@ -62,6 +62,7 @@ class FDC1004 {
     uint8_t measureChannel(uint8_t channel, uint8_t diffChannel, uint8_t capdac, uint16_t * value, uint8_t measType);
     uint8_t verifyData(uint8_t measurement, uint8_t channel, uint8_t diffChannel, uint8_t capdac);
     uint16_t read16(uint8_t reg);
+    uint16_t resetDevice();
 
  private:
     uint8_t _addr;

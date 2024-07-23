@@ -108,3 +108,15 @@ uint8_t FDC1004::readMeasurement(uint8_t measurement, uint16_t * value) {
   return 0;
 }
 
+//reset software of FDC1004
+uint16_t FDC1004::resetDevice() {
+  uint16_t resetData = 1 << 15; //reset is 0x1000
+  uint8_t delayCount = 0;
+  uint8_t maxDelayCount = 10;
+
+  write16(FDC_REGISTER, resetData);
+  delay(100);
+  uint16_t fdcRegister = read16(FDC_REGISTER);
+  return fdcRegister; //will return zero if properly reset
+}
+
