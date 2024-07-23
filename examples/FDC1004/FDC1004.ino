@@ -10,111 +10,90 @@
  * Power on and run this code
  * Open a Serial monitor at 115200 baud
  **************************************************************
- * Read/write convenience functions written by Benjamin Shaya for Rest Devices
+ * Written by Benjamin Shaya for Rest Devices
  * bshaya@alum.mit.edu
  * https://github.com/beshaya/FDC1004
- **************************************************************
- * Functions in this .ino file written by Kris Dorsey, Northeastern University
- * k.dorsey@northeastern.edu
- * https://github.com/kdorseyNU/FDC1004
  **************************************************************/
  
 #include <Wire.h>
 #include <FDC1004.h>
 
-FDC1004 fdc;
-
-////////////Constant measurement parameters/////////////
+uint8_t capdac = 0;
+uint16_t measType = 1; // 0 is single read, 1 is continuous read
+uint8_t measurement = 0; //Select measurement slot 0, 1, 2, or 3
+int readRate = 100;
 const float capMax = 14.9;
 const float capdacConversion = 3.125;
 
-const uint8_t measSingl = 0; // 0 is single read, 1 is continuous read
-const uint8_t measCont = 1; // 0 is single read, 1 is continuous read
-
-const uint8_t measA = 0; 
-const uint8_t measB = 1; 
-const uint8_t measC = 2; 
-const uint8_t measD = 3; 
-
-///////////Parameters you can change//////////////
-uint8_t capdac = 0; // Will auto-adjust, but you can set to expected value for speed
-int readRate = 100;
-
-/////////////////////////
+FDC1004 fdc;
 
 void setup() {
   Serial.begin(115200);
+  delay(1000);
   Wire.begin();
   delay(1000);
+  if(!setCAPDAC()) {
+    Serial.println("Setting CAPDAC failed.");
+    capdac = 0;
+    configTrigRead();
+  }
 }
 
 void loop() {  
-  absoluteCapacitance(measA, 0);
   delay(2500);
-}
-
-float absoluteCapacitance(uint8_t measSlot, uint8_t measType){
-  float capacitanceRelative = capMax + 1; //set to out of scale value. If value is not read, this will re-trigger CAPDAC
-  float capacitanceAbsolute = 0;
-  if (measType == 0){
-    capacitanceRelative = configTrigRead(measSlot, measType);
-  }
-  else{
-    capacitanceRelative = relativeCapacitance(measSlot);
-  } 
-  if ((capacitanceRelative < capMax) && (capacitanceRelative > -1 * capMax)){
-    capacitanceAbsolute = capacitanceRelative + (3.125 * (float)capdac); //converts capdac to pF
+  //uint16_t configBits = fdc.read16(0x0C) << 16;
+  //Serial.println(configBits, BIN);
+  float capacitanceRelative = relativeCapacitance();
+  if ((capacitanceRelative <= capMax) && (capacitanceRelative >= -capMax)){
+    float capacitanceAbsolute = capacitanceRelative + (3.125 * (float)capdac); //converts capdac to pF
     Serial.println(capacitanceAbsolute, 4);
   }
   else {
     Serial.println("Capacitance out of bounds, re-running setCAPDAC");
-    setCAPDAC(measSlot, measType);
+    setCAPDAC();
   }
-  return capacitanceAbsolute;
 }
 
-float relativeCapacitance(uint8_t measSlot) {  
+float relativeCapacitance() {  
   delay(readRate);
   uint16_t value[2];
-  float capacitanceRelative = capMax + 1; //set to out of scale value. If value is not read, this will re-trigger CAPDAC
-  if (! fdc.readMeasurement(measSlot, value)) {
-    // The absolute capacitance is a function of the capdac and the read MSB (value)
+  float capacitanceRelative = 17;
+  if (!fdc.readMeasurement(measurement, value)) {
+    // The absolute capacitance is a function of the capdac and the read MSB (value[0])
     // The measurement resolution is 0.5 fF and the max range is 30 pF 
-    // A 16 bit two's complement binary number ranges from -32768 to 32767 (2^15 - 1) (i.e., resolution of ~0.46 fF with +/- 15 pF range)
-    // Therefore, we don't need to calculate the capacitance using the LSB since the most significant bit of LSB is below the measurement resolution/noise floor
+    // A 16 bit two's complement binary number ranges from -32768 to 32767 (i.e., resolution of ~0.46 fF with +/- 15 pF range)
+    // Therefore, we don't need to calculate the capacitance using the LSB since the most significant bit of LSB is below the measurement resolution
     // We do still need to read LSB since the FDC1004 is expecting it to be read before the next measurement. The convenience functions in the .cpp file take care of this read.
-    int16_t capBits = (int16_t) value[0];
-    float capRatio = (15.0) / (pow(2.0,15) - 1.0); //This converts bits (2^15 - 1) into capacitance (+/- 15 pF range)
+    int16_t capBits = value[0];
+    float capRatio = (15.0) / (32767.0); //This converts bits (2^15 - 1) into capacitance (+/- 15 pF range)
     capacitanceRelative = (float)(capBits) * capRatio; // value in picofarads (pF)
   }
   return capacitanceRelative;
 }
 
-void setCAPDAC(uint8_t measSlot, uint8_t measType){
+int setCAPDAC(){
   capdac = 0;
-  float capacitanceRelative = configTrigRead(measSlot, measType);
+  float capacitanceRelative = configTrigRead();
   uint8_t capdacTimeout = 0;
-  uint8_t numCAPDACtries = 30;
 
-  while (capdacTimeout < numCAPDACtries){
+  while (capdacTimeout < 30){
     if (adjustCAPDAC(capacitanceRelative)){
-      capdacTimeout = numCAPDACtries + 1;
+      capdacTimeout = 31;
+      capacitanceRelative = configTrigRead();
+      return 1;
     }
     else{
       capdacTimeout++;
+      capacitanceRelative = configTrigRead();
     }
-    capacitanceRelative = configTrigRead(measSlot, measType);
   }
-
-  if (capdacTimeout == numCAPDACtries){
-    Serial.println("Setting CAPDAC timed out after maximum number of trials.");
-  }
+  return 0;
 }
 
 int adjustCAPDAC(float capacitanceRelative) {  
     if ((capacitanceRelative < capMax) && (capacitanceRelative > -1*capMax)){
       // if it's in range, adjust capdac so capacitance is as close to 0 as possible
-      capdac += floor(capacitanceRelative/capdacConversion);
+      capdac += capacitanceRelative/capdacConversion;
       capdac = max(capdac, ((uint8_t)0));
       capdac = min(capdac, ((uint8_t)FDC1004_CAPDAC_MAX));
       return 1;
@@ -131,8 +110,8 @@ int adjustCAPDAC(float capacitanceRelative) {
     } 
 }
 
-float configTrigRead(uint8_t measSlot, uint8_t measType){
-  fdc.configureMeasurement(measSlot, FDC1004_Chan0, FDC1004_Chan0, capdac);
-  fdc.triggerMeasurement(measSlot, FDC1004_100HZ, measType);
-  return relativeCapacitance(measSlot);
+float configTrigRead(){
+  fdc.configureMeasurement(measurement, FDC1004_Chan3, FDC1004_Chan3, capdac);
+  fdc.triggerMeasurement(measurement, FDC1004_100HZ, measType);
+  return relativeCapacitance();
 }

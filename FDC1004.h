@@ -54,18 +54,20 @@ typedef struct fdc1004_measurement_t{
 class FDC1004 {
  public:
     FDC1004(uint16_t rate = FDC1004_100HZ);
+    int32_t getCapacitance(uint8_t channel = 1, uint8_t diffChannel = 1, uint8_t measType = 1);
+    uint8_t getRawCapacitance(uint8_t channel, uint8_t diffChannel, fdc1004_measurement_t * value, uint8_t measType);
     uint8_t configureMeasurement(uint8_t measurement, uint8_t channel, uint8_t diffChannel, uint8_t capdac); 
     uint8_t triggerMeasurement(uint8_t measurement, uint8_t rate, uint8_t measType);
     uint8_t readMeasurement(uint8_t measurement, uint16_t * value);
     uint8_t measureChannel(uint8_t channel, uint8_t diffChannel, uint8_t capdac, uint16_t * value, uint8_t measType);
     uint8_t verifyData(uint8_t measurement, uint8_t channel, uint8_t diffChannel, uint8_t capdac);
+    uint16_t read16(uint8_t reg);
 
  private:
     uint8_t _addr;
     uint8_t _rate;
     uint8_t _last_capdac[4];
     void write16(uint8_t reg, uint16_t data);
-    uint16_t read16(uint8_t reg);
 };
 
 #endif

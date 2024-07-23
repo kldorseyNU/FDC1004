@@ -20,6 +20,7 @@ FDC1004::FDC1004(uint16_t rate){
 }
 
 void FDC1004::write16(uint8_t reg, uint16_t data) {
+    //not sure I understand why this is written in 8 bits
   Wire.beginTransmission(_addr);
   Wire.write(reg); //send address
   Wire.write( (uint8_t) (data >> 8));
@@ -32,14 +33,16 @@ uint16_t FDC1004::read16(uint8_t reg) {
   Wire.write(reg);
   Wire.endTransmission();
   uint16_t value;
+  //Wire.beginTransmission(_addr);
   Wire.requestFrom(_addr, (uint8_t)2);
   value = Wire.read();
   value <<= 8;
   value |= Wire.read();
+  //Wire.endTransmission();
   return value;
 }
 
-//configure a measurement (call only when changing the setup of a measurement or capdac value)
+//configure a measurement (call only when changing the setup of a measurement)
 uint8_t FDC1004::configureMeasurement(uint8_t measurement, uint8_t channel, uint8_t diffChannel, uint8_t capdac) {
     //Verify data
     if (!FDC1004_IS_MEAS(measurement) || !FDC1004_IS_CHANNEL(channel) || capdac > FDC1004_CAPDAC_MAX) {
@@ -93,6 +96,7 @@ uint8_t FDC1004::readMeasurement(uint8_t measurement, uint16_t * value) {
     uint16_t fdc_register = read16(FDC_REGISTER);
     if (! (fdc_register & ( 1 << (3-measurement)))) {
         Serial.println("measurement not completed");
+        Serial.println(fdc_register, HEX);
         return 2;
     }
   
