@@ -32,25 +32,28 @@ void setup() {
   delay(1000);
   Wire.begin();
   delay(1000);
-  if(!setCAPDAC()) {
-    Serial.println("Setting CAPDAC failed.");
-    capdac = 0;
-    configTrigRead();
-  }
+  setCAPDAC();
 }
 
 void loop() {  
   delay(2500);
-  //uint16_t configBits = fdc.read16(0x0C) << 16;
-  //Serial.println(configBits, BIN);
+  absoluteCapacitance();
+}
+
+float absoluteCapacitance() {
+  if (measType == 0){
+      configTrigRead();
+    }
   float capacitanceRelative = relativeCapacitance();
   if ((capacitanceRelative <= capMax) && (capacitanceRelative >= -capMax)){
     float capacitanceAbsolute = capacitanceRelative + (3.125 * (float)capdac); //converts capdac to pF
-    Serial.println(capacitanceAbsolute, 4);
+    Serial.println(capacitanceAbsolute);
+    return capacitanceAbsolute;
   }
   else {
     Serial.println("Capacitance out of bounds, re-running setCAPDAC");
     setCAPDAC();
+    return -1;
   }
 }
 
@@ -111,7 +114,7 @@ int adjustCAPDAC(float capacitanceRelative) {
 }
 
 float configTrigRead(){
-  fdc.configureMeasurement(measurement, FDC1004_Chan3, FDC1004_Chan3, capdac);
+  fdc.configureMeasurement(measurement, FDC1004_Chan0, FDC1004_Chan0, capdac);
   fdc.triggerMeasurement(measurement, FDC1004_100HZ, measType);
   return relativeCapacitance();
 }
