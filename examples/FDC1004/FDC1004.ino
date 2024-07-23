@@ -42,7 +42,7 @@ const uint8_t pin4 = (uint8_t)FDC1004_Chan3; //pin 2 must have a higher or same 
 
 ///////////Parameters you can change//////////////
 uint8_t capdac = 0; // Will auto-adjust, but you can set to expected value for speed
-int readRate = 100; //does not currently work below 100 ms/10 Hz
+int readRate = 100; //does not currently work above 100 Hz
 
 /////////////////////////
 
@@ -52,11 +52,10 @@ void setup() {
   Wire.begin();
   delay(1000);
   fdc.resetDevice();
-  setCAPDAC(measA, pin1, pin1, measCont);
+  setCAPDAC(measA, pin2, pin2, measCont);
 }
 
 void loop() {  
-  delay(2500);
   absoluteCapacitance(measA, pin1, pin1, measCont);
 }
 
@@ -81,7 +80,7 @@ float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_
 }
 
 float relativeCapacitance(uint8_t measSlot) {  
-  delay(100);
+  delay(1000/readRate);
   uint16_t value[2];
   float capacitanceRelative = capMax + 1;
   if (!fdc.readMeasurement(measSlot, value)) {
