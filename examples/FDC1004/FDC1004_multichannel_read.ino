@@ -1,7 +1,7 @@
 /**************************************************************
  * Example Program for FDC1004 Library
- * This program will demonstrates reading the capacitance on CAP1 of the FDC1004
- * and changing capdac to try to auto-range the chip
+ * This example will make a single reading on channels 0 and 1 and auto-set CAPDAC for each channel
+ * You can uncomment the relevant lines in setup() and loop() to also read channels 2 and 3
  **************************************************************
  * Setup
  * Connect 3.3V and Ground to the FDC1004 (don't use 5V, you'll fry your chip!)
@@ -23,8 +23,8 @@
 
 FDC1004 fdc;
 
-////////////Constant measurement parameters/////////////
-const float capMax = 14.0;
+////////////Fixed measurement parameters, do not change/////////////////////
+const float capMax = 14.9;
 const float capdacConversion = 3.125;
 
 const uint8_t measSingl = 0; // 0 is single read, 1 is continuous read
@@ -36,70 +36,64 @@ const uint8_t measC = 2;
 const uint8_t measD = 3; 
 
 const uint8_t pin1 = (uint8_t)FDC1004_Chan0;
-const uint8_t pin2 = (uint8_t)FDC1004_Chan1; //pin 2 must have a higher or same value as pin 1!
-const uint8_t pin3 = (uint8_t)FDC1004_Chan2; //pin 2 must have a higher or same value as pin 1!
-const uint8_t pin4 = (uint8_t)FDC1004_Chan3; //pin 2 must have a higher or same value as pin 1!
+const uint8_t pin2 = (uint8_t)FDC1004_Chan1; 
+const uint8_t pin3 = (uint8_t)FDC1004_Chan2; 
+const uint8_t pin4 = (uint8_t)FDC1004_Chan3; 
 
-///////////Parameters you can change//////////////
-int readRate = 10; //does not currently work above 100 Hz
 uint8_t capdacA; 
 uint8_t capdacB; 
 uint8_t capdacC; 
 uint8_t capdacD; 
-/////////////////////////
+
+///////////Parameters you can change//////////////////////////////////////////
+int readRate = 10; //does not currently work above 100 Hz
+
+//////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   Serial.begin(115200);
-  delay(1000);
+  delay(500);
   Wire.begin();
-  delay(1000);
+  delay(500);
   fdc.resetDevice();
-  capdacA = setCAPDAC(measA, pin1, pin1, measSingl);
-  delay(1000);
-  capdacB = setCAPDAC(measB, pin2, pin2, measSingl);
-  delay(1000);
-  /*
-  capdacC = setCAPDAC(measC, pin3, pin3, measCont);
-  delay(1000);
-  capdacD = setCAPDAC(measD, pin4, pin4, measCont);
-  */
+  delay(500);
+  setCAPDAC(measA, pin1, pin1, measSingl, &capdacA);
+  setCAPDAC(measB, pin2, pin2, measSingl, &capdacB);
+  //setCAPDAC(measC, pin3, pin3, measSingl, &capdacC); //uncomment to add channel
+  //setCAPDAC(measD, pin4, pin4, measSingl, &capdacD); //uncomment to add channel
 }
 
 void loop() {  
-  delay(1000);
-  float capA = absoluteCapacitance(measA, pin1, pin1, measSingl, capdacA);
-  if (capA == -1){
-    Serial.println("Capacitance out of bounds, re-running setCAPDAC");
-    capdacA = setCAPDAC(measA, pin1, pin1, measSingl);
-  }
-  else{
-    Serial.print("Cap A: ");
-    Serial.println(capA);
-  }
-  delay(1000);
-  float capB = absoluteCapacitance(measB, pin2, pin2, measSingl, capdacB);
-  if (capB == -1){
-    Serial.println("Capacitance out of bounds, re-running setCAPDAC");
-    capdacB = setCAPDAC(measB, pin2, pin2, measSingl);
-  }
-  else{
-    Serial.print("Cap B: ");
-    Serial.println(capB);
-  }
+  delay(500); // This can be removed, the read rate delay is set within relativeCapacitance()
+  float capA = absoluteCapacitance(measA, pin1, pin1, measSingl, &capdacA);
+  Serial.println(capA);
+  float capB = absoluteCapacitance(measB, pin2, pin2, measSingl, &capdacB);
+  Serial.println(capB);
+  //float capC = absoluteCapacitance(measC, pin3, pin3, measSingl, &capdacC); //uncomment to add channel
+  //Serial.println(capC);
+  //float capD = absoluteCapacitance(measD, pin4, pin4, measSingl, &capdacD); //uncomment to add channel
+  //Serial.println(capD);
 }
 
-float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType, uint8_t capdac) {
+//////////////////////////////////////////////////////////////////////////////
+
+
+float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType, uint8_t * capdacPtr) {
   float capacitanceRelative;
   float capacitanceAbsolute = -1;
   if (measType == 0){
-    capacitanceRelative =  configTrigRead(measSlot, chanA, chanB, measType, capdac);
+    capacitanceRelative =  configTrigRead(measSlot, chanA, chanB, measType, *capdacPtr);
     }
   else{
     capacitanceRelative = relativeCapacitance(measSlot);
     }
   if ((capacitanceRelative <= capMax) && (capacitanceRelative >= -capMax)){
-    capacitanceAbsolute = capacitanceRelative + (3.125 * (float)capdac); //converts capdac to pF
+    capacitanceAbsolute = capacitanceRelative + (3.125 * (float)*capdacPtr); //converts capdac to pF
   }
+  else{
+    Serial.println("Capacitance out of bounds, re-running setCAPDAC");
+    setCAPDAC(measSlot, chanA, chanB, measType, capdacPtr);
+    }
   return capacitanceAbsolute;
 }
 
@@ -120,27 +114,26 @@ float relativeCapacitance(uint8_t measSlot) {
   return capacitanceRelative;
 }
 
-uint8_t setCAPDAC(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType){
-  uint8_t capdac = 0; 
+uint8_t setCAPDAC(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType, uint8_t * capdacPtr){
+  *capdacPtr = 0; 
   uint8_t capdacTimeout = 0;
   uint8_t capdacTimeoutLimit = 30;
 
-  float capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType, capdac);
+  float capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType, *capdacPtr);
   uint8_t capdacFlag = 1;
 
   while ((capdacTimeout < capdacTimeoutLimit) && (capdacFlag)){
-    capdacFlag = adjustCAPDAC(capacitanceRelative, &capdac);
-    capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType, capdac);
+    capdacFlag = adjustCAPDAC(capacitanceRelative, capdacPtr);
+    capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType, *capdacPtr);
     capdacTimeout++;
     delay(5);
   }
 
-  if (!capdacFlag){
-    return capdac;
+  if (capdacFlag){
+    //resetting capdac timed out
+    *capdacPtr = 0;
   }
-  else{
-    return 0;
-  }
+  return *capdacPtr;
 }
 
 uint8_t adjustCAPDAC(float capacitanceRelative, uint8_t * capdacPtr) {  
