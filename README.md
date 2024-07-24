@@ -5,7 +5,7 @@ This Library provides basic functionality for the FDC1004 Capacitance to Digital
 ## Hardware
 
  * A 3.3 V microcontroller board. The FDC1004 is incompatible with 5 V microcontrollers without additional care for the I2C bus voltage!
- * FDC1004
+ * TI FDC1004: https://www.ti.com/product/FDC1004
  * 2 10k Ohm resistors to pull up SDA and SCL pins on I2C line (some microcontrollers may already have these on board)
  * A few non-polarized (e.g., ceramic) capacitors for test, in the range of 5 pF to 100 pF
  
