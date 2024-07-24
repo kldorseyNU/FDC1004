@@ -75,6 +75,7 @@ float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_
     capacitanceRelative =  configTrigRead(measSlot, chanA, chanB, measType, *capdacPtr);
     }
   else{
+    //do not need to re-trigger for continuous read
     capacitanceRelative = relativeCapacitance(measSlot);
     }
   if ((capacitanceRelative <= capMax) && (capacitanceRelative >= -capMax)){
@@ -106,22 +107,26 @@ float relativeCapacitance(uint8_t measSlot) {
 
 uint8_t setCAPDAC(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_t measType, uint8_t * capdacPtr){
   *capdacPtr = 0; 
-  uint8_t capdacTimeout = 0;
-  uint8_t capdacTimeoutLimit = 30;
+  if (chanA == chanB){
+    //only execute if in single-ended mode. CAPDAC is not set in differential mode
 
-  float capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType, *capdacPtr);
-  uint8_t capdacFlag = 1;
+    uint8_t capdacTimeout = 0;
+    uint8_t capdacTimeoutLimit = 30;
 
-  while ((capdacTimeout < capdacTimeoutLimit) && (capdacFlag)){
-    capdacFlag = adjustCAPDAC(capacitanceRelative, capdacPtr);
-    capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType, *capdacPtr);
-    capdacTimeout++;
-    delay(5);
-  }
+    float capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType, *capdacPtr);
+    uint8_t capdacFlag = 1;
 
-  if (capdacFlag){
-    //resetting capdac timed out
-    *capdacPtr = 0;
+    while ((capdacTimeout < capdacTimeoutLimit) && (capdacFlag)){
+      capdacFlag = adjustCAPDAC(capacitanceRelative, capdacPtr);
+      capacitanceRelative = configTrigRead(measSlot, chanA, chanB, measType, *capdacPtr);
+      capdacTimeout++;
+      delay(5);
+    }
+
+    if (capdacFlag){
+      //resetting capdac timed out
+      *capdacPtr = 0;
+    }
   }
   return *capdacPtr;
 }
