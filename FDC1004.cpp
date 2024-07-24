@@ -46,7 +46,7 @@ uint16_t FDC1004::read16(uint8_t reg) {
 uint8_t FDC1004::configureMeasurement(uint8_t measurement, uint8_t channel, uint8_t diffChannel, uint8_t capdac) {
     //Verify data
     if (!FDC1004_IS_MEAS(measurement) || !FDC1004_IS_CHANNEL(channel) || capdac > FDC1004_CAPDAC_MAX) {
-        Serial.println("Measurement or channel out of bounds");
+        Serial.println("Measurement, channel, or capdac out of bounds");
         return 1;
     }
 
@@ -57,7 +57,7 @@ uint8_t FDC1004::configureMeasurement(uint8_t measurement, uint8_t channel, uint
     if (channel == diffChannel && capdac != 0){
         //set CAPDAC, disable differential excitation on EXB
         configuration_data |=  ((uint16_t)0x04) << 10; //CHB disable and CAPDAC enable
-        configuration_data |= ((uint16_t)capdac) << 5; //CAPDAC value
+        configuration_data |= ((uint16_t) capdac) << 5; //CAPDAC value
     }
     else if (channel == diffChannel && capdac == 0){
         //Disable CAPDAC and differential excitation on EXB
