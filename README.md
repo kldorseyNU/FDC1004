@@ -11,7 +11,7 @@ This Library provides basic functionality for the FDC1004 Capacitance to Digital
  
 ## Limitations
  * This code has only been tested on the Adafruit ESP32 Feather V2 microcontroller. It may not work on other 3.3 V microcontrollers. 
- * Potential bug when the FDC1004 is reading single (not repeated) measurements where it will read incorrectly. If you are getting unexpected behavior from the single read example, push the continuous example first and then singleread.
+ * Potential bug when the FDC1004 is reading single (not repeated) measurements where it will read incorrectly. If you are getting unexpected behavior from the single read example, push the continuous example first and then the single read example.
 
 ## Single-ended capacitance (channel to ground) or differential (channel to channel) readings: 
  * If first pin and second pin in configureMeasurement and triggerMeasurement functions are the same, it assumes a sigle-ended measurement
