@@ -20,7 +20,6 @@ FDC1004::FDC1004(uint16_t rate){
 }
 
 void FDC1004::write16(uint8_t reg, uint16_t data) {
-    //not sure I understand why this is written in 8 bits
   Wire.beginTransmission(_addr);
   Wire.write(reg); //send address
   Wire.write( (uint8_t) (data >> 8));
