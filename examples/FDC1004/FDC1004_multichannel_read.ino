@@ -52,9 +52,23 @@ int readRate = 10; //does not currently work above 100 Hz
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("Starting...");
   delay(500);
   Wire.begin();
   delay(500);
+
+  //Make sure device is present on I2C bus
+  Wire.beginTransmission(fdc._addr);
+  int error = Wire.endTransmission();
+  if (error == 0){
+    Serial.println("FDC1004 device found");
+  }
+  else{
+        Serial.print("I2C device NOT found. ");
+        Serial.println("Waiting for 5 seconds before attempting setup...");
+        delay(5000);
+  }
+
   fdc.resetDevice();
   delay(500);
   setCAPDAC(measA, pin1, pin1, measSingl, &capdacA);
@@ -63,16 +77,25 @@ void setup() {
   //setCAPDAC(measD, pin4, pin4, measSingl, &capdacD); //uncomment to add channel
 }
 
+
+
 void loop() {  
   delay(500); // This can be removed, the read rate delay is set within relativeCapacitance()
+  
   float capA = absoluteCapacitance(measA, pin1, pin1, measSingl, &capdacA);
-  Serial.println(capA);
+  Serial.print(millis());
+  Serial.print(" , ");
+  Serial.println(capA, 4);
+
   float capB = absoluteCapacitance(measB, pin2, pin2, measSingl, &capdacB);
-  Serial.println(capB);
+  Serial.print(millis());
+  Serial.print(" , ");
+  Serial.println(capB, 4);
   //float capC = absoluteCapacitance(measC, pin3, pin3, measSingl, &capdacC); //uncomment to add channel
   //Serial.println(capC);
   //float capD = absoluteCapacitance(measD, pin4, pin4, measSingl, &capdacD); //uncomment to add channel
   //Serial.println(capD);
+
 }
 
 //////////////////////////////////////////////////////////////////////////////
