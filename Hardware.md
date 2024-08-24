@@ -18,4 +18,7 @@ The board files are available in the Github repo. The footprint for all componen
 11. Do a connectivity test with a multimeter to make sure there is no short between the 3V and GND pins. You should measure a resistance of about 2.8 kOhms.
 12. Re-test.
 13. Write the capacitance measurement sketch you desire to the microcontroller. Congrats! You're done.
+![FDDC1004_breakout_v0](https://github.com/user-attachments/assets/30cb453d-c502-4af5-91b9-7214e580eecd)
+
+
 
