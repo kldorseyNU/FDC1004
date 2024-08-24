@@ -1,6 +1,8 @@
-# FDC1004 Single-ended and Differential Read Examples
+# FDC1004 Capacitance Reading and Breakout Board Hardware 
 
 This library provides basic functionality for the FDC1004 Capacitance to Digital Sensor. The FDC1004 provides femto-farad precision for measuring capacitances up to 115 pF in increments of 500 aF. The .ino files in examples demonstrate reading continuous values, triggered single values for multiple channels, and differential measurements. 
+
+The breakout board provides four-channel unshielded readings. Each channel is passively shielded by a grounded guard ring. You can get this board or use a microcontroller as described below in hardware. Please see the Hardware file for more information about the breakout board design.
 
 ## Hardware
 
