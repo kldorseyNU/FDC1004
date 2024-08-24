@@ -15,4 +15,4 @@ The board files are available in the Github repo. The footprint for all componen
 8. De-solder the test wires and solder the microcontroller to the backside of the board using the castellated pins. 
 9. Do a connectivity test with a multimeter to make sure there is no short between 3V and GND. You should measure a resistance of about 2.8 kOhms.
 10. Re-test.
-11. If desired, populate J5 to connect a battery.
+11. If desired, populate J5 for external connections to GND or to operate with a battery rather than USB-C.
