@@ -19,3 +19,9 @@ The board files are available in the Github repo. The footprint for all componen
 12. Re-test.
 13. Write the capacitance measurement sketch you desire to the microcontroller. Congrats! You're done.
 
+![FDC1004_breakout_v0_frontside](https://github.com/user-attachments/assets/a6f1fec5-4a4b-4033-860b-fa37824b0b2f)
+![FDC1004_breakout_v0_backside](https://github.com/user-attachments/assets/14826cb0-e546-43e8-9247-113106086fa9)
+
+
+
+
