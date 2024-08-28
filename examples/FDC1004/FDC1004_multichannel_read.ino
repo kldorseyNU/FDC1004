@@ -45,6 +45,8 @@ uint8_t capdacB;
 uint8_t capdacC; 
 uint8_t capdacD; 
 
+unsigned long measTime;
+
 ///////////Parameters you can change//////////////////////////////////////////
 int readRate = 10; //does not currently work above 100 Hz
 
@@ -60,13 +62,19 @@ void setup() {
   //Make sure device is present on I2C bus
   Wire.beginTransmission(fdc._addr);
   int error = Wire.endTransmission();
+  int I2C_timeout = 10; 
+  while (I2C_timeout > 0 && error > 0){
+    Serial.print("I2C device NOT found. ");
+    Serial.println("Waiting for 5 seconds before attempting setup...");
+    delay(5000);
+    I2C_timeout -= 1; 
+    error = Wire.endTransmission();
+  }
   if (error == 0){
     Serial.println("FDC1004 device found");
   }
   else{
-        Serial.print("I2C device NOT found. ");
-        Serial.println("Waiting for 5 seconds before attempting setup...");
-        delay(5000);
+    Serial.print("I2C device NOT found  and timeout reached. Data is invalid.");
   }
 
   fdc.resetDevice();
@@ -80,21 +88,32 @@ void setup() {
 
 
 void loop() {  
-  delay(500); // This can be removed, the read rate delay is set within relativeCapacitance()
-  
+
   float capA = absoluteCapacitance(measA, pin1, pin1, measSingl, &capdacA);
-  Serial.print(millis());
+  Serial.print("cap A, ");
+  Serial.print(measTime);
   Serial.print(" , ");
   Serial.println(capA, 4);
-
+  
   float capB = absoluteCapacitance(measB, pin2, pin2, measSingl, &capdacB);
-  Serial.print(millis());
+  Serial.print("cap B, ");
+  Serial.print(measTime);
   Serial.print(" , ");
   Serial.println(capB, 4);
-  //float capC = absoluteCapacitance(measC, pin3, pin3, measSingl, &capdacC); //uncomment to add channel
-  //Serial.println(capC);
-  //float capD = absoluteCapacitance(measD, pin4, pin4, measSingl, &capdacD); //uncomment to add channel
-  //Serial.println(capD);
+  
+  /*
+  float capC = absoluteCapacitance(measC, pin3, pin3, measSingl, &capdacC); //uncomment to add channel
+  Serial.print("cap C, ");
+  Serial.print(measTime);
+  Serial.print(" , ");
+  Serial.println(capC, 4);
+
+  float capD = absoluteCapacitance(measD, pin4, pin4, measSingl, &capdacD); //uncomment to add channel
+  Serial.print("cap D, ");
+  Serial.print(measTime);
+  Serial.print(" , ");
+  Serial.println(capD, 4);
+  */
 
 }
 
@@ -111,6 +130,7 @@ float absoluteCapacitance(uint8_t measSlot, uint8_t chanA, uint8_t chanB, uint8_
     //do not need to re-trigger for continuous read
     capacitanceRelative = relativeCapacitance(measSlot);
     }
+  measTime = millis();
   if ((capacitanceRelative <= capMax) && (capacitanceRelative >= -capMax)){
     capacitanceAbsolute = capacitanceRelative + (3.125 * (float)*capdacPtr); //converts capdac to pF
   }

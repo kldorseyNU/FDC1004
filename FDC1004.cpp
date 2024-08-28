@@ -33,10 +33,17 @@ uint16_t FDC1004::read16(uint8_t reg) {
   Wire.endTransmission();
   uint16_t value;
   Wire.requestFrom(_addr, (uint8_t)2);
-  value = Wire.read();
+  if (Wire.available() == 2){
+    value = Wire.read();
   value <<= 8;
   value |= Wire.read();
   return value;
+  }
+  else{
+    Serial.print("Wrong number of bytes available: ");
+    Serial.println(Wire.available());
+  }
+  return 0;
 }
 
 //configure a measurement (call only when changing the setup of a measurement)
