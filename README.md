@@ -1,8 +1,8 @@
 # FDC1004 Capacitance Reading and Breakout Board Hardware 
 
-This library provides basic functionality for the FDC1004 Capacitance to Digital Sensor. The FDC1004 provides femto-farad precision for measuring capacitances up to 115 pF in increments of 500 aF. The .ino files in examples demonstrate reading continuous values, triggered single values for multiple channels, and differential measurements. 
+This library provides basic functionality for the FDC1004 Capacitance to Digital Sensor. According to the datasheet, the FDC1004 provides femto-farad precision for measuring capacitances up to 115 pF in increments of 500 aF. The .ino files in examples demonstrate reading continuous values, triggered single values for multiple channels, and differential measurements. 
 
-The breakout board provides four-channel unshielded readings. Each channel is passively shielded by a grounded guard ring. You can get this board or use a microcontroller as described below in hardware. Please see the Hardware file for more information about the breakout board design.
+The breakout board provides shielded capacitance readings on four channels. Off board, each channel is shielded with a micro-coax connector (U.FL), and the shealth can be connected to either GND (for passive shielding) or SHLD (for active shielding) using a 0 $\Omega$ resistor soldered to the board. The board schematic and PCB files are included in the BreakoutBoard directory in this repository. Please see the Hardware file for more information about the breakout board design.
 
 ## Hardware
 
@@ -12,8 +12,8 @@ The breakout board provides four-channel unshielded readings. Each channel is pa
  * A few non-polarized (e.g., ceramic) capacitors for test, in the range of 5 pF to 100 pF
  
 ## Limitations
- * This code has only been tested on the ESP32, ESP32-S2, and ESP32-S3 microcontroller breakout boards from Adafruit. It may not work on other 3.3 V microcontrollers such as the Adafruit Nano. 
- * There is a potential bug when the FDC1004 is reading single (not repeated) measurements where it will read incorrectly. If you are getting unexpected behavior from the single read example or no reading, push the continuous example first and then the single read example.
+ * This code has only been tested on the ESP32, ESP32-S2, and ESP32-S3 microcontroller breakout boards from Adafruit. It may not work on other 3.3 V microcontrollers such as the Adafruit Nano or Sparkfun Redboards that have 3.3 V logic levels. 
+ * There is a potential bug when the FDC1004 is reading single (not repeated) measurements where it will read incorrectly. If you are getting unexpected behavior from the single read example, or no reading, push the continuous example first and then the single read example.
 
 ## Single-ended capacitance (channel to ground) or differential (channel to channel) readings: 
  * If first pin and second pin in configureMeasurement and triggerMeasurement functions are the same, it assumes a sigle-ended measurement
