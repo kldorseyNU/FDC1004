@@ -14,8 +14,8 @@ The board files are available in the Github repo. The footprint for all componen
 6. Connect the board to the microcontroller via the soldered wires on the backside and reset the microcontroller.
 7. Replace/rework the MCP9701 or FDC1004 chips as necessary if either test failed. 
 8. De-solder the test wires.
-9. Populate J6 for additional ground connections during measurements. Make sure J6 is affixed to the TOP side of the bpard.
-10. If desired, populate J5 on the TOP side for external connections to GND or to operate with a battery rather than USB-C.
+9. Populate J6 for additional ground connections during measurements. Make sure J6 is affixed to the TOP side of the board.
+10. If desired, populate J5 on the TOP side for external connections to GND to operate with a battery rather than USB power.
 11. Solder the microcontroller to the back side of the board using the castellated pins. 
 12. Do a connectivity test with a multimeter to make sure there is no short between the 3V and GND pins. You should measure a resistance of about 2.8 kOhms.
 13. Re-test.
