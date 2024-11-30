@@ -24,9 +24,6 @@ The board files are available in the Github repo. The footprint for all componen
 ### Top side of the board
 ![board_top](https://github.com/user-attachments/assets/d75f759b-e83a-4266-ba1f-ab57ecd87e33)
 
-### Back side of the board
-![board_back](https://github.com/user-attachments/assets/be98fdb5-17ce-48d6-8f58-294e89ce54ae)
-
 
 
 
